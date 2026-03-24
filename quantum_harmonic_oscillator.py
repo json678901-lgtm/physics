@@ -16,6 +16,7 @@ Approach
 Author: Antigravity (AI pair-programmer)
 """
 
+import argparse
 import numpy as np
 from scipy.linalg import eigh_tridiagonal, solve_banded
 import matplotlib.pyplot as plt
@@ -337,6 +338,18 @@ def animate_evolution(x, snapshots, interval: int = 30):
         fig, _update, frames=len(snapshots),
         interval=interval, blit=True
     )
+
+    # --- Pause/Resume Control ---
+    is_paused = [False]
+    def toggle_pause(event):
+        if is_paused[0]:
+            anim.resume()
+        else:
+            anim.pause()
+        is_paused[0] = not is_paused[0]
+
+    fig.canvas.mpl_connect('button_press_event', toggle_pause)
+
     return fig, anim
 
 
@@ -345,11 +358,16 @@ def animate_evolution(x, snapshots, interval: int = 30):
 # ──────────────────────────────────────────────
 
 def main():
+    parser = argparse.ArgumentParser(description="1D Quantum Harmonic Oscillator Simulation")
+    parser.add_argument('--max-states', type=int, default=10, help='Number of eigenstates to compute (max energy level)')
+    parser.add_argument('--show-states', type=int, default=5, help='Number of eigenstates to display in plots')
+    args = parser.parse_args()
+
     # --- Grid & eigenstates ---
     N_GRID   = 512       # interior grid points
     L        = 8.0       # domain half-width
-    N_STATES = 10        # number of eigenstates to compute
-    N_SHOW   = 5         # number to display in plots
+    N_STATES = args.max_states        # number of eigenstates to compute
+    N_SHOW   = min(args.show_states, N_STATES)  # number to display in plots
 
     x, dx = make_grid(L=L, N=N_GRID)
     energies, psi = solve_eigenstates(x, dx, n_states=N_STATES)
